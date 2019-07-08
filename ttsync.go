@@ -5,19 +5,21 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	freshdesk "github.com/cweagans/go-freshdesk"
-	"github.com/cweagans/go-freshdesk/querybuilder"
 	"os"
-	"github.com/kobtea/go-todoist/todoist"
 	"regexp"
 	"strconv"
+
+	freshdesk "github.com/cweagans/go-freshdesk"
+	"github.com/cweagans/go-freshdesk/querybuilder"
+	"github.com/kobtea/go-todoist/todoist"
 )
 
 var (
-	freshdeskDomain string
-	freshdeskApikey string
-	todoistApiKey string
-	todoistFreshdeskList string
+	freshdeskDomain       string
+	freshdeskApikey       string
+	todoistApiKey         string
+	todoistFreshdeskList  string
+	freshdeskCustomDomain string
 )
 
 func init() {
@@ -25,7 +27,12 @@ func init() {
 	flag.StringVar(&freshdeskApikey, "fd-apikey", os.Getenv("FRESHDESK_APIKEY"), "The API key provided on your Freshdesk 'Profile Settings' page")
 	flag.StringVar(&todoistApiKey, "todoist-apikey", os.Getenv("TODOIST_APIKEY"), "Your Todoist API key")
 	flag.StringVar(&todoistFreshdeskList, "todoist-freshdesk-list", os.Getenv("TODOIST_FRESHDESK_LIST"), "The list to which Freshdesk tickets should be added")
+	flag.StringVar(&freshdeskCustomDomain, "fd-custom-domain", os.Getenv("FRESHDESK_CUSTOM_DOMAIN"), "A custom domain to use for ticket links in tasks. You need to set this if your Freshdesk is using a custom domain. ")
 	flag.Parse()
+
+	if freshdeskCustomDomain == "" {
+		freshdeskCustomDomain = freshdeskDomain + ".freshdesk.com"
+	}
 }
 
 func main() {
@@ -75,13 +82,13 @@ func main() {
 
 	// Create tasks for tickets that are open and assigned to the current user.
 	for _, ticket := range tickets.Results {
-		tasktext := fmt.Sprintf("#%d: [%s](https://%s.freshdesk.com/a/%d)", ticket.ID, ticket.Subject, freshdeskDomain, ticket.ID)
+		tasktext := fmt.Sprintf("#%d: [%s](https://%s/a/tickets/%d)", ticket.ID, ticket.Subject, freshdeskCustomDomain, ticket.ID)
 
 		tditems := t.Item.FindByContent(tasktext)
 		if len(tditems) == 0 {
 			tdlogger.Printf("Task not found for ticket %d. Creating...\n", ticket.ID)
 			tditem := todoist.Item{
-				Content: tasktext,
+				Content:   tasktext,
 				ProjectID: project.ID,
 			}
 			_, err = t.Item.Add(tditem)
@@ -102,7 +109,7 @@ func main() {
 	for _, item := range todoistitems {
 		// Skip items that don't match.
 		if !ticketID.MatchString(item.Content) {
-			continue;
+			continue
 		}
 
 		ticketIDString := ticketID.FindString(item.Content)

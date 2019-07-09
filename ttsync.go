@@ -17,7 +17,7 @@ import (
 var (
 	freshdeskDomain       string
 	freshdeskApikey       string
-	todoistApiKey         string
+	todoistAPIKey         string
 	todoistFreshdeskList  string
 	freshdeskCustomDomain string
 )
@@ -25,7 +25,7 @@ var (
 func init() {
 	flag.StringVar(&freshdeskDomain, "fd-domain", os.Getenv("FRESHDESK_DOMAIN"), "____.freshdesk.com -- the domain for your support portal")
 	flag.StringVar(&freshdeskApikey, "fd-apikey", os.Getenv("FRESHDESK_APIKEY"), "The API key provided on your Freshdesk 'Profile Settings' page")
-	flag.StringVar(&todoistApiKey, "todoist-apikey", os.Getenv("TODOIST_APIKEY"), "Your Todoist API key")
+	flag.StringVar(&todoistAPIKey, "todoist-apikey", os.Getenv("TODOIST_APIKEY"), "Your Todoist API key")
 	flag.StringVar(&todoistFreshdeskList, "todoist-freshdesk-list", os.Getenv("TODOIST_FRESHDESK_LIST"), "The list to which Freshdesk tickets should be added")
 	flag.StringVar(&freshdeskCustomDomain, "fd-custom-domain", os.Getenv("FRESHDESK_CUSTOM_DOMAIN"), "A custom domain to use for ticket links in tasks. You need to set this if your Freshdesk is using a custom domain. ")
 	flag.Parse()
@@ -66,7 +66,7 @@ func main() {
 	tdlogger.Println("Downloading todoist account data")
 
 	// Create a new client.
-	t, _ := todoist.NewClient("", todoistApiKey, "", "", tdlogger)
+	t, _ := todoist.NewClient("", todoistAPIKey, "", "", tdlogger)
 	ctx := context.Background()
 	err = t.FullSync(ctx, []todoist.Command{})
 	if err != nil {
